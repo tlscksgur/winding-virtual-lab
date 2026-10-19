@@ -1,6 +1,4 @@
 {
-  "source_url": "http://192.168.220.130/saige-winding/source",
-  "commit": "0e4fbf7f646a81749b188e088018b501c4de769b",
   "files": {
     "SaigeWindingMonitoring/winding/__init__.py": {
       "sha256": "fe4f54408339a0ab3d84a50e4e6ffedb0fed299e05991762069ba4729c842e3a",
@@ -47,8 +45,8 @@
       "bytes": 4046
     },
     "SaigeWindingMonitoring/winding/modules/checkpoint_handler.py": {
-      "sha256": "5eb8862750f92e1d3cd4a4c67eaf51a21ee69d3e7119c35a69d367eec6bb5cb9",
-      "bytes": 5709
+      "sha256": "1443202b720f7f81090f8d37662bdea3f551484d693bd9bd8f3faaf2e845c68e",
+      "bytes": 5569
     },
     "SaigeWindingMonitoring/winding/modules/direction.py": {
       "sha256": "5952010987dc6396a9fd5453021ce906c2585a4bbfcf59caf41aed11933637e3",
@@ -203,6 +201,6 @@
       "bytes": 78
     }
   },
-  "upstream_archive_sha256": "fdd9fe92f23124bcb8da96344acbddfb789f9d9d87a3b4fdec3c8425a81cb000",
-  "scope": "Published Python source baseline only; checkpoint secrets removed. Upstream full archive remains local."
+  "scope": "Published Python source baseline only; checkpoint secrets removed. Upstream full archive remains local.",
+  "commit": "published-baseline"
 }
