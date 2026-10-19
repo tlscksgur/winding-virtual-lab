@@ -14,11 +14,14 @@ from safety import install_offline_guard
 from worker import write_json
 from motion_settings import read as read_motion_settings
 from loadcell_model import contact as loadcell_contact
+from simulation_diagnostics import Diagnostics
+from simulation_scenarios import SCENARIOS
 
 DEFAULTS = dict(flange=2400, core=1200, width=1900, cable=60, shaft=2600,
                 guide_height=500, guide_distance=2000, rpm=6, speed=12,
                 delay=.7, inertia=.45, response=.05, ppm=.25,
-                seconds=2400, start='full', calls=1, loadcell='off')
+                seconds=2400, start='full', calls=1, loadcell='off',
+                operating='code', relay_mode='queued', scenario='custom')
 
 def parameters(values):
     p={**DEFAULTS,**{k:v for k,v in values.items() if k in DEFAULTS}}
@@ -38,6 +41,9 @@ def parameters(values):
         raise ValueError('가이드가 드럼에 너무 가깝습니다. 가이드 거리·높이를 조정하세요')
     if p['start'] not in ('right','left','full'):raise ValueError('시작 위치 오류')
     if p['loadcell'] not in ('off','underroller','robot'):raise ValueError('로드셀 보정 방식 오류')
+    if p['operating'] not in ('code','handover'):raise ValueError('운영값 설정 오류')
+    if p['relay_mode'] not in ('queued','on_delay'):raise ValueError('릴레이 응답 가정 오류')
+    if p['scenario'] not in {'custom',*(s['id'] for s in SCENARIOS)}:raise ValueError('시험 상황 오류')
     return p
 
 class Plant:
@@ -63,6 +69,7 @@ class Plant:
         self.samples=[];self.deposition=[]
         self.robot_x=0.;self.robot_v=0.;self.lc_drive=0;self.lc_sensed=0;self.lc_queue=[]
         self.lc_hits=0;self.lc_conflict_seconds=0.;self.lc_max_offset=0.
+        self.effective_relay=0;self.missed_pulses=0;self.delivered_pulses=0;self.first_missed=0.
 
 
     @property
@@ -81,9 +88,17 @@ class Plant:
         if not result.get('require_drum_shift'):return
         d=1 if result['drum_moving_direction']=='left_to_right' else -1
         duration=max(0,min(10,float(result.get('shift_strength',3000))/1000))
-        self.queue.append((self.t+self.p['delay'],d,duration))
+        # Two explicit alternatives: transport delay preserves the whole pulse;
+        # request-clock ON delay consumes its first delay seconds. Neither is
+        # claimed to be the actual PLC implementation.
+        remaining=duration-self.p['delay'] if self.p['relay_mode']=='on_delay' else duration
+        if remaining>0:self.queue.append((self.t+self.p['delay'],d,remaining))
+        else:
+            if not self.missed_pulses:self.first_missed=self.t
+            self.missed_pulses+=1
         self.commands.append(dict(t=round(self.t,3),direction=d,duration=duration,
-                                  state=result['process_state'],x=round(self.x,3)))
+                                  state=result['process_state'],x=round(self.x,3),
+                                  delivered_duration=max(0,remaining)))
 
     def loadcell(self):
         return loadcell_contact(self.p,self.radius,self.x,self.c,self.robot_x)
@@ -94,6 +109,7 @@ class Plant:
             if self.t+1e-8>=when:
                 self.off=max(self.off,self.t+duration) if self.relay==d else self.t+duration
                 self.relay=d;self.queue.remove(event)
+                self.delivered_pulses+=1
         if self.t>=self.off:self.relay=0
         lc=self.loadcell();self.lc_max_offset=max(self.lc_max_offset,abs(lc['offset']))
         mode=self.p['loadcell']
@@ -109,6 +125,7 @@ class Plant:
         # the AI relay when it acts on the same underroller drive. Not PLC code.
         pressure_relay=-self.lc_drive if mode=='underroller' else 0
         effective_relay=pressure_relay or self.relay
+        self.effective_relay=effective_relay
         if pressure_relay and self.relay and pressure_relay!=self.relay:
             self.lc_conflict_seconds+=dt
         target=effective_relay*self.p['speed']
@@ -177,8 +194,21 @@ class Controller:
         load_definitions(src/'modules/score.py',ns)
         load_definitions(src/'modules/shifting.py',ns)
         spec=importlib.util.spec_from_file_location('virtual_winding_settings',src/'engine/config.py')
-        settings=importlib.util.module_from_spec(spec);sys.modules[spec.name]=settings;spec.loader.exec_module(settings)
+        settings=importlib.util.module_from_spec(spec);sys.modules[spec.name]=settings
+        # Compile in memory so even direct diagnostic reads cannot write a
+        # __pycache__ next to the protected source snapshot.
+        exec(compile((src/'engine/config.py').read_text(encoding='utf-8-sig'),
+                     str(src/'engine/config.py'),'exec'),settings.__dict__)
         settings.CURRENT_SITE=site;config=settings.MonitoringConfig()
+        if site not in ('taping4','taping7'):raise ValueError('지원하지 않는 호기입니다')
+        if plant.p['operating']=='handover':
+            # Caller-supplied commissioning values, not a modification of source
+            # defaults. Set before monitors/timers copy configuration fields.
+            config.common.shift_strength=4000 if site=='taping7' else 3000
+            config.shift.shift_alarm_interval=6 if site=='taping7' else 5
+        self.operating_settings=dict(profile=plant.p['operating'],
+            shift_strength_ms=config.common.shift_strength,
+            shift_alarm_interval=config.shift.shift_alarm_interval)
         self.ns=ns;self.m=ns['ShiftMonitor'](config);self.D=ns['Direction']
         self.direction=self.D.RIGHT_TO_LEFT if plant.direction<0 else self.D.LEFT_TO_RIGHT
         # Ideal orthographic camera. All coordinates share one scale and frame.
@@ -231,6 +261,7 @@ class Controller:
 def run(cfg):
     out=Path(cfg['output']);install_offline_guard(out)
     p=parameters(cfg.get('plant',{}));plant=Plant(p);control=Controller(cfg['source'],cfg.get('site','taping4'),plant)
+    diagnostics=Diagnostics(p['cable'])
     records=[];trace=[];deposition=[];events=[];result={};next_call=0.;next_sample=0.;next_ring=0.;last_state=None
     dt=1/60;fault=None;phase_travel={'swing':0.,'return':0.}
     for i in range(int(p['seconds']/dt)+1):
@@ -245,16 +276,19 @@ def run(cfg):
         if plant.t+1e-7>=next_sample:
             trace.append(plant.sample(last_state,result));next_sample+=.1
         if plant.q+1e-8>=next_ring:
+            diagnostics.deposition(plant)
             deposition.append([round(plant.q,6),round(plant.c,3),round(plant.radius,3),round(plant.contact_angle,6)])
             next_ring+=1/72
         if plant.layer_full:fault='권취 반지름이 날개 반지름에 도달했습니다';break
         if abs(plant.x)>p['width']*1.5:fault='가상 대차 이동 한계를 넘었습니다';break
         if i==int(p['seconds']/dt):break
         before_x=plant.x;plant.step(dt)
+        diagnostics.step(plant,before_x,dt)
         if last_state in ('first_swing','first_swing_start'):phase_travel['swing']+=abs(plant.x-before_x)
         elif last_state in ('second_swing','second_swing_start'):phase_travel['return']+=abs(plant.x-before_x)
         if i%3600==0:write_json(out/'progress.json',{'stage':'가상 권취 계산','completed':round(plant.t,1),'total':p['seconds']})
-    summary={'mode':'simulation','offline':True,'ai_inference':False,'actual_python_controller':True,'site':cfg.get('site','taping4'),
+    observations,observation_points=diagnostics.finish(plant,trace)
+    summary={**observations,'mode':'simulation','offline':True,'ai_inference':False,'actual_python_controller':True,'site':cfg.get('site','taping4'),
              'assumed_mechanics':True,'frames':len(records),'seconds':round(plant.t,3),
              'turns':round(plant.q,3),'layer_changes':plant.crossings,'round_trips':plant.full_passes//2,
              'full_traverses':plant.full_passes,
@@ -280,6 +314,7 @@ def run(cfg):
     write_json(out/'simulation.json',{'parameters':p,'site':cfg.get('site','taping4'),'summary':summary,'trace':trace,
                'deposition':deposition,'commands':plant.commands,'events':events,
                'control_settings':motion,
+               'operating_settings':control.operating_settings,'observation_points':observation_points,
                'initial':{'c':plant.initial_c,'direction':plant.initial_dir}})
     write_json(out/'summary.json',summary)
     (out/'state-log.txt').write_text('\n'.join(control.messages),encoding='utf-8')

@@ -5,6 +5,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 import motion_settings
+from simulation_scenarios import catalog as scenario_catalog
 
 ROOT=Path(__file__).resolve().parent
 ORIGINAL=ROOT/'original'/'source'/'SaigeWindingMonitoring'
@@ -126,6 +127,9 @@ class Handler(BaseHTTPRequestHandler):
             path=urlparse(self.path).path;query=self.query()
             if path=='/api/status': return self.json({'offline':True,'original_commit':MANIFEST['commit'],'source_files':len(MANIFEST['files']),'environment':environment_status(),'editable':EDITABLE,'inputs':str(ROOT/'inputs'),'jobs':[{k:v for k,v in j.items() if not k.startswith('_')} for j in JOBS.values()]})
             if path=='/api/verify': return self.json(verify_original())
+            if path=='/api/scenarios':
+                from simulation_worker import DEFAULTS
+                return self.json(scenario_catalog(DEFAULTS))
             if path=='/api/motion':
                 site=query.get('site',['taping4'])[0];rel='winding/engine/config.py'
                 return self.json({'site':site,'working':motion_settings.read(WORKING/rel,site),
@@ -160,7 +164,7 @@ class Handler(BaseHTTPRequestHandler):
             if path=='/api/sample':
                 file=ROOT/'inputs'/'sample-main.jpg';return self.json({'main':str(file) if file.is_file() else ''})
             if path=='/reference.jpg':return self.send_bytes((ROOT/'inputs'/'sample-main.jpg').read_bytes(),'image/jpeg')
-            files={'/':'sim.html','/sim.js':'sim.js','/sim-motion.js':'sim-motion.js','/sim.css':'sim.css','/sim-model.js':'sim-model.js',
+            files={'/':'sim.html','/sim.js':'sim.js','/sim-motion.js':'sim-motion.js','/sim-scenarios.js':'sim-scenarios.js','/sim.css':'sim.css','/sim-model.js':'sim-model.js',
                    '/three.min.js':'three.min.js','/reference-video.jpg':'reference-video.jpg','/replay':'index.html','/app.js':'app.js','/style.css':'style.css'}
             if path in files:
                 p=ROOT/'web'/files[path];return self.send_bytes(p.read_bytes(),mimetypes.guess_type(p)[0] or 'text/plain')

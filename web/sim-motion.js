@@ -35,5 +35,11 @@ for(const n of ['speed','cable'])document.querySelector(`[name="${n}"]`).addEven
 $('#motion-original').onclick=()=>{if(!loaded)return;fill(loaded.original.values);dirty=true;note('원본값을 불러왔습니다. 실험을 누르면 작업 복사본에 적용합니다.');};
 $('#motion-reload').onclick=()=>load(document.querySelector('[name="site"]').value,true);
 document.querySelector('[name="site"]').addEventListener('change',e=>load(e.target.value));
-window.MotionSettings={load,save,estimate};
+async function stage(patch={}){
+ await load(document.querySelector('[name="site"]').value,true);
+ if(!available)throw Error('설정 코드를 읽지 못해 상황을 불러오지 못했습니다.');
+ fill({...loaded.original.values,...patch});dirty=true;
+ note('상황의 스윙 설정을 불러왔습니다. 실험 시 작업 복사본에 백업 후 저장합니다.');
+}
+window.MotionSettings={load,save,estimate,stage};
 })();
