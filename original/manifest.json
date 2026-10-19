@@ -1,0 +1,208 @@
+{
+  "source_url": "http://192.168.220.130/saige-winding/source",
+  "commit": "0e4fbf7f646a81749b188e088018b501c4de769b",
+  "files": {
+    "SaigeWindingMonitoring/winding/__init__.py": {
+      "sha256": "fe4f54408339a0ab3d84a50e4e6ffedb0fed299e05991762069ba4729c842e3a",
+      "bytes": 980
+    },
+    "SaigeWindingMonitoring/winding/data/data_class.py": {
+      "sha256": "195df6bd172d518bb53cf99a9ec53b1c7b383c6093c6bd06e2fdc07fa32dfe1d",
+      "bytes": 4007
+    },
+    "SaigeWindingMonitoring/winding/engine/__init__.py": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "SaigeWindingMonitoring/winding/engine/api.py": {
+      "sha256": "871fd031b356bdaa936f14624c0094a7c0e041f14be21a8b202fd0c00a5fe8a6",
+      "bytes": 20922
+    },
+    "SaigeWindingMonitoring/winding/engine/config.py": {
+      "sha256": "4c27993afea05d590989dbdc343c2a842382a2269373bdaa34c8238334d750ef",
+      "bytes": 13948
+    },
+    "SaigeWindingMonitoring/winding/engine/monitoring.py": {
+      "sha256": "7e3efdac0071de622da3a043bb5460526af52583d877ce7ac868ca1f58e9f037",
+      "bytes": 21275
+    },
+    "SaigeWindingMonitoring/winding/error.py": {
+      "sha256": "ea01962a595d170d83228b4a6893e90da6a0e057b979dbc6ca643c2b0980f458",
+      "bytes": 2562
+    },
+    "SaigeWindingMonitoring/winding/modules/__init__.py": {
+      "sha256": "4bca1757b640b7dc723c38281f3a7b2cd9e0d05c5447c4c7a02204402c2c3cd8",
+      "bytes": 283
+    },
+    "SaigeWindingMonitoring/winding/modules/angle_monitor.py": {
+      "sha256": "314d78c8fe2b03d715a290603fdd5deef2450cf480994862dd106255b62bcae4",
+      "bytes": 2741
+    },
+    "SaigeWindingMonitoring/winding/modules/anomaly.py": {
+      "sha256": "a6170730a9abcb039190009d3087da239ed935b46e6d666223656fdc5ba2e4c4",
+      "bytes": 10416
+    },
+    "SaigeWindingMonitoring/winding/modules/base.py": {
+      "sha256": "4e40043fb2796f2111b202b1416fb7b20e9ba846b408daf9c73ecd1636fe51d8",
+      "bytes": 4046
+    },
+    "SaigeWindingMonitoring/winding/modules/checkpoint_handler.py": {
+      "sha256": "5eb8862750f92e1d3cd4a4c67eaf51a21ee69d3e7119c35a69d367eec6bb5cb9",
+      "bytes": 5709
+    },
+    "SaigeWindingMonitoring/winding/modules/direction.py": {
+      "sha256": "5952010987dc6396a9fd5453021ce906c2585a4bbfcf59caf41aed11933637e3",
+      "bytes": 26172
+    },
+    "SaigeWindingMonitoring/winding/modules/drum.py": {
+      "sha256": "3aa9411cf07c164d34e50b127199996b0a20a472882b1cf951b35242755095a7",
+      "bytes": 2047
+    },
+    "SaigeWindingMonitoring/winding/modules/line_tracker.py": {
+      "sha256": "8cda188480b9719f40e8b86e20393b0ea432ca7071bd8b6e0bdd3b5c93f7e64a",
+      "bytes": 31571
+    },
+    "SaigeWindingMonitoring/winding/modules/logging.py": {
+      "sha256": "38fbb4f0ec41856a53afa536d6a3111dfdbf0614ab72f5e7ff10d8dbabee0f68",
+      "bytes": 20033
+    },
+    "SaigeWindingMonitoring/winding/modules/process_state.py": {
+      "sha256": "b0a18121e8ef2c8d6ed63f671ac4739c0b4f7f4c6f4bb0302faf4180f0c0fb3b",
+      "bytes": 883
+    },
+    "SaigeWindingMonitoring/winding/modules/score.py": {
+      "sha256": "a9a49a6185358778553125282cdb40254688bb1a9558156ac481ad0c8559c53f",
+      "bytes": 21147
+    },
+    "SaigeWindingMonitoring/winding/modules/segmentation.py": {
+      "sha256": "70f35ccd18035ac1b6f830bd2e960082aa9f6668fc8192217f456e2b7f833f18",
+      "bytes": 10955
+    },
+    "SaigeWindingMonitoring/winding/modules/shift_state.py": {
+      "sha256": "0d5fba19633f5c8b2c7784283369339d81efc00169c5b5c0a224c16fcaa7be1c",
+      "bytes": 21379
+    },
+    "SaigeWindingMonitoring/winding/modules/shifting.py": {
+      "sha256": "eb49bdb3b4d2fc19f160378ea60a4a3bf4efed6dad7d5262d924660175960c05",
+      "bytes": 45851
+    },
+    "SaigeWindingMonitoring/winding/modules/sponge.py": {
+      "sha256": "2a54f67599b44782b5c0c154eb4f58101410cbc5ff3c2f5bbe4a65eeb8201094",
+      "bytes": 2751
+    },
+    "SaigeWindingMonitoring/winding/modules/state_archiver.py": {
+      "sha256": "eccc365ac05032f61ea8dee477e760c7dcc20aaf3f7f072e4dcd33f1476c66a1",
+      "bytes": 10821
+    },
+    "SaigeWindingMonitoring/winding/script/benchmark.py": {
+      "sha256": "34a5f647f56b22f7cedb8bd42e8870ee91b5411b98f2f94c555ffb6264aeadae",
+      "bytes": 4755
+    },
+    "SaigeWindingMonitoring/winding/script/extract_frame.py": {
+      "sha256": "eed7000789f4917cae40403af013b93479de38c05273556395e093d05fca63a4",
+      "bytes": 4094
+    },
+    "SaigeWindingMonitoring/winding/script/monitoring_replay.py": {
+      "sha256": "54130249f75b4c609fdafcc99e1620541db2b42b00456dece6f79699d70c8be1",
+      "bytes": 8554
+    },
+    "SaigeWindingMonitoring/winding/script/monitoring_single.py": {
+      "sha256": "3769ed7f759ee77740cf170ce4723df7a314027c9dc2336a88b676b9373bc3d6",
+      "bytes": 12339
+    },
+    "SaigeWindingMonitoring/winding/script/tact_time.py": {
+      "sha256": "c7ccd7a556982e58b17c11c9ab6ac194b614939ca4e92030173193b0ea0764cb",
+      "bytes": 1618
+    },
+    "SaigeWindingMonitoring/winding/script/test.py": {
+      "sha256": "76102a288c147f2967427f2b15475101662e1d73e6ac908a93ea37d61edc1792",
+      "bytes": 11106
+    },
+    "SaigeWindingMonitoring/winding/script/test_api.py": {
+      "sha256": "dc5ea1da5084e24f37664c8948afe638e3ab2b5a593b1a98b3e906c545fe4a80",
+      "bytes": 11239
+    },
+    "SaigeWindingMonitoring/winding/script/test_protrusion.py": {
+      "sha256": "862cd4de4052b27644094bf11f165a29c135a14d49d9486bd690652c9381981d",
+      "bytes": 16147
+    },
+    "SaigeWindingMonitoring/winding/script/test_side_view.py": {
+      "sha256": "11e957147655fe97b2065d7d52887ba35b88b3fc2ddb8a8a204441588151cdbc",
+      "bytes": 10631
+    },
+    "SaigeWindingMonitoring/winding/script/test_swing.py": {
+      "sha256": "df0a0a19845f80a721805b772200ceb800e308f0deae6bdb74399bf88c4703fe",
+      "bytes": 18005
+    },
+    "SaigeWindingMonitoring/winding/utils/anomaly_tools.py": {
+      "sha256": "6eb8ac9d4cf02aee7c85814870fc2220242a35eef99e65e2ea054e4763224f80",
+      "bytes": 3298
+    },
+    "SaigeWindingMonitoring/winding/utils/cache.py": {
+      "sha256": "b8c20a94aa9066262f51f9da8cae3fcbf2ffa81be9e8cc9b8c0a71386c435cb4",
+      "bytes": 5374
+    },
+    "SaigeWindingMonitoring/winding/utils/coordinate.py": {
+      "sha256": "fd82230b182e41fb61bc5f2b5322c21364010cf289f4d7effbd3cf5f93cd5b08",
+      "bytes": 457
+    },
+    "SaigeWindingMonitoring/winding/utils/corner.py": {
+      "sha256": "2689ac94a06e6387da4fd9f1732563dae714641d157e4d774f491978ce622633",
+      "bytes": 2236
+    },
+    "SaigeWindingMonitoring/winding/utils/geometry.py": {
+      "sha256": "c2368df9ca64bdef2f233c4f354cf16f65f45e92946089e35d7668aa79a6381d",
+      "bytes": 2004
+    },
+    "SaigeWindingMonitoring/winding/utils/label.py": {
+      "sha256": "205da86a72855dd9693ec939b9971094ffb283391e6f74237e6c2e3a09301d38",
+      "bytes": 6084
+    },
+    "SaigeWindingMonitoring/winding/utils/line_detection.py": {
+      "sha256": "dbaab338702e4d3065a307eb667a2af7355cd053a25f2869fee54fe8169d86fb",
+      "bytes": 14493
+    },
+    "SaigeWindingMonitoring/winding/utils/mask.py": {
+      "sha256": "f10e9f176889a29658d43b92dddf8ea8d7220045902c8d7c961f00080e5981f9",
+      "bytes": 9428
+    },
+    "SaigeWindingMonitoring/winding/utils/metric.py": {
+      "sha256": "e866043d39ba604f78106114c6c80ff0610fe76c84128d03846f112bd8cb9a74",
+      "bytes": 2075
+    },
+    "SaigeWindingMonitoring/winding/utils/protrusion.py": {
+      "sha256": "894d852dbe94ddfda9f4a7cdbce93ba76221869da68f8cbf30d54a366ac51aa4",
+      "bytes": 2692
+    },
+    "SaigeWindingMonitoring/winding/utils/roi.py": {
+      "sha256": "a3223c96e528b9068ff238793286b1748341e56a56baff1e685f9059ff7689c0",
+      "bytes": 5538
+    },
+    "SaigeWindingMonitoring/winding/utils/smoothing.py": {
+      "sha256": "53a2ef2a9af4e7452ca20bc4db66d25ffe9b647c12fda6f562df759895e22472",
+      "bytes": 1546
+    },
+    "SaigeWindingMonitoring/winding/utils/timer.py": {
+      "sha256": "fcf35a77db8140162483a6e39327287593187f55bd5e4eb1c84040985b0708ab",
+      "bytes": 1214
+    },
+    "SaigeWindingMonitoring/winding/utils/video_decoder.py": {
+      "sha256": "4c32f37a23646defd613303901bae2ff9fc79e3e2c9ea30eb29d3485e019269b",
+      "bytes": 13662
+    },
+    "SaigeWindingMonitoring/winding/utils/visualization.py": {
+      "sha256": "ec59a69e7fb9ba0c92eaa2fe00cd65e2898988be824c7c9f04c90b3f1be4060c",
+      "bytes": 32240
+    },
+    "SaigeWindingMonitoring/winding/utils/visualization_tools.py": {
+      "sha256": "1e6972483eafbefd9e9639441660e38fabe49831cdb98748d021ca3e501ecce6",
+      "bytes": 6782
+    },
+    "SaigeWindingMonitoring/winding/version.py": {
+      "sha256": "1dcdff2465768f21f5c44dd986239324224828af4afba85c6df40cd02aec99c1",
+      "bytes": 78
+    }
+  },
+  "upstream_archive_sha256": "fdd9fe92f23124bcb8da96344acbddfb789f9d9d87a3b4fdec3c8425a81cb000",
+  "scope": "Published Python source baseline only; checkpoint secrets removed. Upstream full archive remains local."
+}

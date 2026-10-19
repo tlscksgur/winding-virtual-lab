@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>권취 테스트 랩</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body><div class="shell">
+<header><div class="brand"><span class="brand-mark">W</span><div><h1>권취 테스트 랩</h1><p>세이지 원본 엔진 · 로컬 실험실</p></div></div><span class="offline"><i></i> PLC 연결 없음</span></header>
+<div class="source-bar"><span id="source-info">원본 정보 확인 중</span><button id="verify" class="text-button">원본 무결성 확인</button><span id="verify-status"></span></div>
+<main><aside class="settings"><div class="panel-title"><span class="eyebrow">INPUT</span><h2>테스트 준비</h2></div>
+<label>실행 방식<select id="mode"><option value="preview">영상 검토 · AI 없이 프레임 보기</option><option value="segmentation">정면 분할 확인 · 이미지 / 영상</option><option value="monitoring">전체 권취 판단 · 정면 + 측면 영상</option><option value="scenario">상태 전이 검사 · 합성 입력</option></select></label>
+<p id="mode-help" class="help">실제 모델로 드럼·케이블 영역을 검출합니다.</p>
+<div id="video-fields"><label>정면 영상 / 이미지<input id="main-path" type="text" placeholder="C:\영상\main.mp4"></label><label class="file-button">파일 선택<input id="main-file" type="file" accept="video/*,image/*"></label><button id="sample" class="text-button">첨부한 현장 사진 사용</button>
+<div id="side-fields" hidden><label>측면 영상<input id="side-path" type="text" placeholder="같은 시간에 촬영한 side.mp4"></label><label class="file-button">측면 영상 선택<input id="side-file" type="file" accept="video/*"></label></div>
+<div class="field-row"><label>시작 (초)<input id="start" type="number" min="0" value="0"></label><label>길이 (초)<input id="duration" type="number" min="1" max="3600" value="20"></label></div>
+<div class="field-row"><label>분석 간격 (초)<input id="interval" type="number" min="0.1" max="10" step="0.1" value="1"></label><label>최대 프레임<input id="max-frames" type="number" min="1" max="3000" value="30"></label></div></div>
+<label>개소 설정<select id="site"><option value="taping4">태핑 4호기</option><option value="taping7">태핑 7호기</option></select></label>
+<label class="check"><input type="checkbox" id="compare" checked> 원본과 수정본을 같은 입력으로 비교</label>
+<button id="run" class="primary">테스트 실행 <span>→</span></button><button id="cancel" class="secondary" hidden>현재 테스트 중단</button>
+<div id="environment" class="environment">엔진 환경 확인 중</div><p id="notice" role="status"></p><label>이전 실행<select id="history"><option value="">실행 기록 선택</option></select></label>
+</aside><section class="workspace">
+<nav class="tabs" aria-label="작업 화면"><button id="result-tab" class="active" aria-selected="true">분석 결과</button><button id="code-tab" aria-selected="false">수정용 소스</button></nav>
+<section id="results-panel"><div class="result-heading"><div><span class="eyebrow">REPLAY & COMPARE</span><h2 id="run-title">입력부터 판단까지 한눈에</h2></div><select id="variant" aria-label="결과 종류"><option value="working">수정본 결과</option><option value="baseline">원본 결과</option></select></div>
+<div id="job-progress" hidden><span id="job-status"></span><progress id="progress" max="100" value="0"></progress></div>
+<div id="empty" class="empty"><div class="reel-symbol"><span></span><span></span><span></span><span></span><span></span></div><h3>테스트할 장면을 선택하세요</h3><p>영상을 분석하면 검출 영역과 권취 상태가 여기에 표시됩니다.</p><p class="small">정면 사진으로 분할 확인부터 시작할 수 있습니다.</p></div>
+<div id="result-view" hidden><div id="image-grid" class="image-grid"><figure><figcaption>입력 프레임</figcaption><img id="raw-frame" alt="분석한 원본 프레임"></figure><figure><figcaption>AI 검출 영역</figcaption><img id="overlay-frame" alt="드럼과 케이블 영역을 표시한 분석 프레임"></figure></div><div id="scenario-note" hidden class="scenario-note">합성 입력으로 원본 상태 전이 클래스만 실행한 검사입니다. 영상 AI 분석·설비 움직임 결과가 아닙니다.</div>
+<div class="transport"><button id="play" class="secondary">▶ 재생</button><input id="frame" type="range" min="0" max="0" value="0" aria-label="결과 프레임"><span id="frame-info" class="mono"></span><select id="speed" aria-label="재생 속도"><option value="1">1×</option><option value="2">2×</option><option value=".5">0.5×</option></select></div>
+<div class="metrics"><div><span>공정 상태</span><strong id="state">—</strong><small id="state-code"></small></div><div><span>밀착 점수</span><strong id="tightening">—</strong></div><div><span>스윙 점수</span><strong id="swing">—</strong></div><div><span>가상 이동 요청</span><strong id="move">—</strong></div></div>
+<div id="comparison" class="comparison" hidden></div>
+<div class="event-heading"><h3>프레임별 판단</h3><span id="result-count" class="small"></span></div><div class="table-wrap"><table><thead><tr><th>시각</th><th>상태</th><th>밀착</th><th>스윙</th><th>드럼 방향</th></tr></thead><tbody id="events"></tbody></table></div><div class="output-path"><span>결과 저장 위치</span><code id="output"></code></div></div>
+</section>
+<section id="code-panel" hidden><div class="result-heading"><div><span class="eyebrow">WORKING COPY</span><h2>수정용 엔진 소스</h2></div><span id="changed">원본과 동일</span></div><div class="editor-tools"><select id="code-file" aria-label="수정할 파일"></select><button id="save" class="primary">수정본에 저장</button></div><p class="help">저장 대상: working 폴더 · 원본 보관본은 변경하지 않습니다. 저장 후 테스트를 다시 실행하세요.</p><label class="editor-label">Python 소스<textarea id="editor" spellcheck="false" aria-label="수정용 Python 소스"></textarea></label><details><summary>원본 소스와 비교</summary><pre id="baseline-code"></pre></details></section>
+</section></main><footer><span>원본 보관 → 작업 복사본 → 실행별 소스 스냅샷 → 결과 비교</span><span>모든 이동 요청은 로그로만 기록</span></footer></div></body></html>
