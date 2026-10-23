@@ -1,8 +1,8 @@
 @echo off
 cd /d "%~dp0"
-if not exist ".venv\Scripts\python.exe" (
-  echo Test runtime not found. See README.md
-  pause
-  exit /b 1
+if exist ".venv\Scripts\python.exe" (
+  ".venv\Scripts\python.exe" launch.py
+) else (
+  python launch.py
 )
-".venv\Scripts\python.exe" launch.py
+if errorlevel 1 pause

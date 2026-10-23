@@ -1,7 +1,7 @@
 from pathlib import Path
 import hashlib,json,shutil,zipfile
 ROOT=Path(__file__).resolve().parent
-candidates=list(Path('C:/Users/DXEL01/Downloads').glob('*.crdownload'))+list(Path('C:/Users/DXEL01/Downloads').glob('python*.zip'))
+candidates=list(Path('C:/Users/example/Downloads').glob('*.crdownload'))+list(Path('C:/Users/example/Downloads').glob('python*.zip'))
 candidate=None
 for path in sorted(candidates,key=lambda p:p.stat().st_size,reverse=True):
     if not zipfile.is_zipfile(path):continue
@@ -22,5 +22,5 @@ with zipfile.ZipFile(archive) as z:
         if i%5000==0:print(f'Runtime extracted {i}/{len(z.infolist())}',flush=True)
 (ROOT/'runtime.json').write_text(json.dumps({'python':str(dest/'python'/'python.exe'),'source_archive_sha256':hashlib.sha256(archive.read_bytes()).hexdigest()},indent=2),encoding='utf-8')
 (ROOT/'inputs').mkdir(exist_ok=True)
-shutil.copyfile('C:/Users/DXEL01/Downloads/main_00155.jpg',ROOT/'inputs'/'sample-main.jpg')
+shutil.copyfile('C:/Users/example/Downloads/main_00155.jpg',ROOT/'inputs'/'sample-main.jpg')
 print('Vendor runtime ready')

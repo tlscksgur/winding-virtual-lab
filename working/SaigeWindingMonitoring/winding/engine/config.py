@@ -116,7 +116,7 @@ class ShiftSettings:
     is_mid_start_progress_threshold: float = (
         0.10  # 드럼 이동 유효 영역 박스 설정 시, 이미 케이블이 감기는 도중에 시작한 것으로 판단하는 진행률 임계값
     )
-    default_swing_shift_strength: int = 1300  # 스윙 단계에서 출력할 shift_strength 기본값 (밀리초)
+    default_swing_shift_strength: int = 1100  # 스윙 단계에서 출력할 shift_strength 기본값 (밀리초)
 
     # tightening
     progress_rate_threshold: float = field(
@@ -145,7 +145,7 @@ class ShiftSettings:
     protrusion_confirmation_frames: int = 12  # 극단 돌출부 결정을 위한 돌출 프레임 수
     min_pixel_for_protrusion: int = 6  # 돌출 판단을 위한 극단 돌출부 높이 차이 임계값 (픽셀)
 
-    angle_thresholds: ClassVar[list[float]] = [35.0, 10.0]  # 극단 한바퀴 권취 로직 종료를 판단하기 위한 각도 임계값 [left degree, right degree]
+    angle_thresholds: ClassVar[list[float]] = [35.0, 25.0]  # 극단 한바퀴 권취 로직 종료를 판단하기 위한 각도 임계값 [left degree, right degree]
 
     # swing shift
     swing_score_thresholds: list[float] = field(
@@ -154,7 +154,7 @@ class ShiftSettings:
     target_swing_score: float = 0.2  # 목표 스윙 점수
     swing_shift_alarm_interval: int = 2  # 드럼 스윙 이동 알람 주기
     swing_range_factors: list[float] = field(
-        default_factory=lambda: [3.0, 1.2]
+        default_factory=lambda: [1.0, 1.2]
     )  # 드럼 스윙 범위 조정 비율 [left, right]. * cable_width
     swing_term_angles: list[float] = field(
         default_factory=lambda: SITE_CONFIGS[CURRENT_SITE]["swing_term_angles"]

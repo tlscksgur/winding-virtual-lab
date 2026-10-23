@@ -305,6 +305,7 @@ function colorLayers(s){
  root.dataset.cableColors=JSON.stringify({currentLayer:active+1,underLayer:active>0?active:null,current:'#ffa11a',under:'#0d121a',older:'#0d121a',scope:'entire active layer; existing black below'});
 }
 function setData(value){
+ setIssue(null);
  configure(value.parameters);data=value;
  const initial=value.initial,first=value.deposition[0];
  const from=-initial.direction*(p.width-p.cable)/2,turns=Math.max(0,initial.direction*(initial.c-from)/p.cable),n=Math.ceil(turns*72);
@@ -353,7 +354,56 @@ function update(s){if(!p||!s)return;s={...s,a:underfeedAngle(s.r)};current=s;col
  if(pathMesh){pathMesh.geometry.dispose();groups.path.remove(pathMesh);}pathMesh=tube([incoming,V(0,p.guide_height*U*.9,p.guide_distance*U+.5),g,g.clone().lerp(contact,.04),sensorCable,g.clone().lerp(contact,.85),contact],p.cable*U/2,topCable,groups.path,96,12);
  root.dataset.robot=JSON.stringify(robotDiagnostics);
  root.dataset.geometry=JSON.stringify({q:s.q,drumX:s.x,cableX:s.c,guideX:0,width:p.width,flange:p.flange,shaft:p.shaft,cable:p.cable,core:p.core,guideHeight:p.guide_height,guideDistance:p.guide_distance,feed:'bottom_to_top',contactHeight:contact.y/U,contactZ:contact.z/U,surfaceVelocityY:-Math.sin(s.a)*s.r*p.rpm*TAU/60,drawCount:geometry?.drawRange.count||0,attachmentGap:contact.distanceTo(tipLocal.clone().applyAxisAngle(V(1,0,0),reel.rotation.x).add(reel.position))});dirty=true;}
-function setCamera(){const d=distance*Math.max(1,Math.min(1.5,1.0/camera.aspect));camera.position.set(target.x+d*Math.sin(pitch)*Math.sin(yaw),target.y+d*Math.cos(pitch),target.z+d*Math.sin(pitch)*Math.cos(yaw));camera.lookAt(target);camera.updateMatrixWorld();}
+// Annotation geometry belongs to the scene, never to the cable or physics model.
+const issueGroup=new T.Group();scene.add(issueGroup);issueGroup.visible=false;
+const issueRing=new T.Mesh(new T.TorusGeometry(.17,.018,12,48),new T.MeshBasicMaterial({color:0xf04438,depthTest:false,depthWrite:false,toneMapped:false}));
+issueRing.material.color.convertSRGBToLinear();issueRing.renderOrder=1000;issueGroup.add(issueRing);
+const issueArrow=new T.ArrowHelper(V(0,-1,0),V(),1,0xf04438,.22,.14);issueGroup.add(issueArrow);
+issueArrow.traverse(o=>{if(o.material){o.material.depthTest=false;o.material.depthWrite=false;o.material.toneMapped=false;o.material.color?.convertSRGBToLinear();}o.renderOrder=1001;});
+const secondaryRing=issueRing.clone();secondaryRing.material=issueRing.material.clone();secondaryRing.material.color.setHex(0x1484ab).convertSRGBToLinear();issueGroup.add(secondaryRing);
+const secondaryArrow=new T.ArrowHelper(V(0,-1,0),V(),1,0x1484ab,.22,.14);issueGroup.add(secondaryArrow);
+secondaryArrow.traverse(o=>{if(o.material){o.material.depthTest=false;o.material.depthWrite=false;o.material.toneMapped=false;o.material.color?.convertSRGBToLinear();}o.renderOrder=1001;});
+const issuePin=document.createElement('span'),secondaryPin=document.createElement('span');issuePin.className='issue-pin';secondaryPin.className='issue-pin secondary';issuePin.hidden=secondaryPin.hidden=true;stage.append(issuePin,secondaryPin);
+let issue=null,issueSample=null,issueCableX=0,issueGhosts=[],issueCamera=null;
+function restoreIssueGhosts(){for(const [object,original,cast]of issueGhosts){object.material.dispose();object.material=original;object.castShadow=cast;}issueGhosts=[];}
+function carriageIssuePosition(){return V(current.x*U+p.width*U/2+.15,.2,p.flange*U*.32);}
+function issuePosition(){
+ if(!issue||!current)return V();
+ if(['contact','conflict'].includes(issue.kind)){const at=V().fromArray(robotDiagnostics?.grip||[0,p.guide_height*U,p.guide_distance*U]);at.x+=(issueSample.lc_signal||Math.sign(issueSample.lc_offset||0))*p.cable*.16*U;return at;}
+ if(['coast','missed'].includes(issue.kind))return carriageIssuePosition();
+ const a=underfeedAngle(issueSample.r)+(current.q-issueSample.q)*TAU;
+ return V((current.x+issueCableX)*U,(p.shaft+issueSample.r*Math.cos(a))*U,issueSample.r*Math.sin(a)*U);
+}
+function updateIssue(){
+ if(!issue||!current){issueGroup.visible=false;issuePin.hidden=secondaryPin.hidden=true;return;}
+ issueGroup.visible=true;const at=issuePosition();issueRing.position.copy(at);issueRing.quaternion.copy(camera.quaternion);
+ issueRing.scale.setScalar(Math.max(1,p.cable*U*5));const origin=at.clone().add(V(.65,.85,.5));
+ issueArrow.position.copy(origin);issueArrow.setDirection(at.clone().sub(origin).normalize());issueArrow.setLength(origin.distanceTo(at),.22,.14);
+ const side=issueSample.c>=0?'오른쪽':'왼쪽',cell=issueSample.lc_signal<0?'왼쪽':issueSample.lc_signal>0?'오른쪽':'손';
+ const label={gap:'권취층 · 케이블 사이 틈',edge:`${side} 드럼 끝단 · 추가 감김`,coast:'언더롤러 대차 · OFF 뒤 잔류 이동',missed:'언더롤러 대차 · 이동 신호 미응답',contact:`${cell} 로드셀 · 케이블 접촉`,conflict:`${cell} 로드셀 · 보정 요청 발생`}[issue.kind];
+ function pin(e,point,text){const q=point.clone().project(camera);e.hidden=q.z>1||Math.abs(q.x)>.97||Math.abs(q.y)>.97;e.textContent=text;e.style.left=Math.max(100,Math.min(stage.clientWidth-100,(q.x+1)*stage.clientWidth/2))+'px';e.style.top=Math.max(35,(1-q.y)*stage.clientHeight/2-24)+'px';}
+ pin(issuePin,at,label);const conflict=issue.kind==='conflict';secondaryRing.visible=secondaryArrow.visible=conflict;secondaryPin.hidden=true;
+ const targets=[{part:label,position:at.toArray()}];
+ if(conflict){const to=carriageIssuePosition(),origin=to.clone().add(V(-.6,.8,.5));secondaryRing.position.copy(to);secondaryRing.quaternion.copy(camera.quaternion);secondaryArrow.position.copy(origin);secondaryArrow.setDirection(to.clone().sub(origin).normalize());secondaryArrow.setLength(origin.distanceTo(to),.22,.14);const text=`언더롤러 · AI ${issueSample.relay>0?'→':'←'} / 로드셀 ${-issueSample.lc_drive>0?'→':'←'}`;pin(secondaryPin,to,text);targets.push({part:text,position:to.toArray()});}
+ root.dataset.issue=JSON.stringify({kind:issue.kind,t:issue.t,position:at.toArray(),targets});
+}
+function setIssue(value,focus=false){
+ restoreIssueGhosts();issue=value;if(!value){issueGroup.visible=false;issuePin.hidden=secondaryPin.hidden=true;delete root.dataset.issue;if(issueCamera){({yaw,pitch,distance,activeView}=issueCamera);target.copy(issueCamera.target);dimensionLines.visible=showDimensions&&!['robot','tool'].includes(activeView);issueCamera=null;}dirty=true;return;}
+ if(['gap','edge'].includes(value.kind))for(const o of reel.children){if(o.isMesh&&o!==winding&&o!==tip&&!Array.isArray(o.material)){const original=o.material;issueGhosts.push([o,original,o.castShadow]);o.material=original.clone();o.material.transparent=true;o.material.opacity=.10;o.material.depthWrite=false;o.castShadow=false;}}
+ const trace=data?.trace||[];let lo=0,hi=trace.length-1;
+ while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(trace[mid].t<=value.t)lo=mid;else hi=mid-1;}
+ const a=trace[lo]||current,b=trace[Math.min(lo+1,trace.length-1)]||a,u=b.t>a.t?Math.max(0,Math.min(1,(value.t-a.t)/(b.t-a.t))):0;
+ issueSample={...a};for(const k of ['q','c','r'])issueSample[k]=a[k]+(b[k]-a[k])*u;issueCableX=issueSample.c;
+ if(value.kind==='gap'){
+  const points=data.deposition||[],q=issueSample.q-1;let a=0,b=points.length-1;
+  while(a<b){const m=Math.ceil((a+b)/2);if(points[m][0]<=q)a=m;else b=m-1;}
+  const prev=points[a],next=points[Math.min(a+1,points.length-1)];
+  if(prev&&next){const u=next[0]>prev[0]?Math.max(0,Math.min(1,(q-prev[0])/(next[0]-prev[0]))):0;issueCableX=(issueSample.c+prev[1]+(next[1]-prev[1])*u)/2;}
+ }
+ if(focus){if(!issueCamera)issueCamera={yaw,pitch,distance,target:target.clone(),activeView};target.copy(issuePosition());yaw=.22;pitch=1.35;distance=['coast','missed'].includes(value.kind)?7:3.5;if(value.kind==='conflict'){const other=carriageIssuePosition();distance=Math.max(10,target.distanceTo(other)*2.7);target.lerp(other,.5);}activeView='issue';dimensionLines.visible=false;}
+ dirty=true;
+}
+function setCamera(){const d=distance*Math.max(1,Math.min(1.5,1.0/camera.aspect));camera.position.set(target.x+d*Math.sin(pitch)*Math.sin(yaw),target.y+d*Math.cos(pitch),target.z+d*Math.sin(pitch)*Math.cos(yaw));camera.lookAt(target);camera.updateMatrixWorld();updateIssue();}
 function viewPreset(name){
  if(!p)return;activeView=name;root.dataset.focus=name;dimensionLines.visible=showDimensions&&!['robot','tool'].includes(name);const H=p.shaft*U,R=p.flange*U/2,W=p.width*U,Z=p.guide_distance*U;
  if(name==='robot'){target.set(robotRig.baseX*.46,1.7*robotRig.scale,robotRig.baseZ);yaw=.08;pitch=1.38;distance=8.6*robotRig.scale;}
@@ -363,7 +413,7 @@ function viewPreset(name){
  else{target.set(-.28,H*.56,.8);yaw=.28;pitch=1.43;distance=Math.max(15,Math.max(H+R,W*1.3,Z)*2.75);}
  const v=document.querySelector('#view');if(v)v.value=name;dirty=true;
 }
-function draw(){for(const o of dimensionLines.children)o.position.x=o.userData.moves?(current?.x||0)*U:0;setCamera();renderer.render(scene,camera);for(const tag of dimTags){const q=tag.p.clone().add(V(tag.moves?(current?.x||0)*U:0,0,0)).project(camera);tag.e.hidden=!showDimensions||['robot','tool'].includes(activeView)||q.z>1||Math.abs(q.x)>.95||Math.abs(q.y)>.95;tag.e.style.left=((q.x+1)*stage.clientWidth/2)+'px';tag.e.style.top=((1-q.y)*stage.clientHeight/2)+'px';}dirty=false;}
+function draw(){for(const o of dimensionLines.children)o.position.x=o.userData.moves?(current?.x||0)*U:0;setCamera();renderer.render(scene,camera);for(const tag of dimTags){const q=tag.p.clone().add(V(tag.moves?(current?.x||0)*U:0,0,0)).project(camera);tag.e.hidden=!showDimensions||['robot','tool','issue'].includes(activeView)||q.z>1||Math.abs(q.x)>.95||Math.abs(q.y)>.95;tag.e.style.left=((q.x+1)*stage.clientWidth/2)+'px';tag.e.style.top=((1-q.y)*stage.clientHeight/2)+'px';}dirty=false;}
 function resize(){if(!stage.clientWidth||!stage.clientHeight)return;renderer.setSize(stage.clientWidth,stage.clientHeight);camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();dirty=true;}new ResizeObserver(resize).observe(stage);
 const pointer=new Map();let lastPinch=0;
 stage.addEventListener('pointerdown',e=>{if(e.target.tagName!=='CANVAS')return;stage.setPointerCapture(e.pointerId);pointer.set(e.pointerId,{x:e.clientX,y:e.clientY});});
@@ -373,5 +423,5 @@ document.querySelector('#dimensions').onclick=e=>{showDimensions=!showDimensions
 document.querySelector('#view').onchange=e=>{viewPreset(e.target.value);document.querySelector('.view-title').scrollIntoView({block:'start',behavior:'auto'});};
 document.querySelector('#fence-toggle').onchange=e=>{groups.fence.visible=e.target.checked;dirty=true;};
 function animate(){if(dirty)draw();requestAnimationFrame(animate);}resize();requestAnimationFrame(animate);
-window.WindingView={configure,setData,update,previewDimensions};root.dataset.ready='true';
+window.WindingView={configure,setData,update,previewDimensions,setIssue};root.dataset.ready='true';
 })();

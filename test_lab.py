@@ -9,11 +9,11 @@ class LabTests(unittest.TestCase):
     def test_original_snapshot_matches_download(self):
         result=lab.verify_original();self.assertTrue(result['ok']);self.assertEqual(result['files'],len(lab.MANIFEST['files']))
     def test_network_input_is_rejected(self):
-        for value in ['rtsp://camera/live','http://192.168.220.130/source','\\\\server\\share\\a.mp4']:
+        for value in ['rtsp://camera/live','http://gpu.example.internal/source','\\\\server\\share\\a.mp4']:
             with self.assertRaises(ValueError):lab.local_input(value)
     def test_worker_cannot_connect_or_write_original(self):
         with tempfile.TemporaryDirectory(dir=ROOT/'outputs') as name:
-            code="from safety import install_offline_guard; import socket; install_offline_guard("+repr(name)+"); socket.socket().connect(('192.168.220.130',80))"
+            code="from safety import install_offline_guard; import socket; install_offline_guard("+repr(name)+"); socket.socket().connect(('gpu.example.internal',80))"
             result=subprocess.run([sys.executable,'-c',code],cwd=ROOT,capture_output=True,text=True)
             self.assertNotEqual(result.returncode,0);self.assertIn('connect blocked',result.stderr)
             code="from safety import install_offline_guard; install_offline_guard("+repr(name)+"); open("+repr(str(ROOT/'original'/'blocked-write.txt'))+",'w').write('x')"

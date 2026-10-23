@@ -29,3 +29,11 @@ python -m venv .venv
 ```
 
 자세한 사용법은 [SIMULATION_GUIDE.md](SIMULATION_GUIDE.md)를 참고하세요.
+
+## Latest source update (2026-10-23)
+
+Includes issue observation overlays, sensor/cart locations, camera guidance,
+invalidating stale observations after condition changes, and launcher error handling.
+The source distribution uses the currently running Python for server and simulation
+workers; install requirements into your own environment. The workstation-only
+embedded runtime is not redistributed.

@@ -39,7 +39,7 @@ def runtime_python():
     if settings.exists():
         path=Path(json.loads(settings.read_text(encoding='utf-8'))['python'])
         if path.is_file(): return path
-    return ROOT/'.venv'/'Scripts'/'python.exe'
+    return Path(sys.executable)
 
 def environment_status():
     report=ROOT/'environment-status.json'
@@ -86,7 +86,10 @@ def do_run(job, options):
                     'plant':options.get('plant',{})}
             (folder/'config.json').write_text(json.dumps(config,ensure_ascii=False,indent=2),encoding='utf-8')
             worker=ROOT/({'scenario':'scenario_worker.py','simulation':'simulation_worker.py'}.get(mode,'worker.py'))
-            executable=ROOT/'.venv'/'Scripts'/'python.exe' if mode in {'scenario','preview','simulation'} else runtime_python()
+            # Use the same policy-approved embedded runtime for local server
+            # and simulation workers; the uv test venv's select.pyd may be
+            # blocked by Windows application control on managed PCs.
+            executable=Path(sys.executable) if mode in {'scenario','preview','simulation'} else runtime_python()
             env=os.environ.copy();env.update(PYTHONDONTWRITEBYTECODE='1',PYTHONUTF8='1',OMP_NUM_THREADS='4',MKL_NUM_THREADS='4',HF_HUB_OFFLINE='1',TRANSFORMERS_OFFLINE='1')
             with open(folder/'console.log','w',encoding='utf-8') as log:
                 proc=subprocess.Popen([str(executable),str(worker),str(folder/'config.json')],cwd=folder,env=env,stdout=log,stderr=subprocess.STDOUT,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))

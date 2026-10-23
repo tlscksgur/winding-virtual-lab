@@ -3,7 +3,7 @@ from pathlib import Path
 import hashlib, json, shutil, zipfile
 
 ROOT = Path(__file__).resolve().parent
-downloads = Path('C:/Users/DXEL01/Downloads')
+downloads = Path('C:/Users/example/Downloads')
 candidates = sorted(list(downloads.glob('source-main*.zip')) + list(downloads.glob('*.crdownload')), key=lambda p:p.stat().st_mtime, reverse=True)
 source = None
 for item in candidates:
@@ -38,7 +38,7 @@ with zipfile.ZipFile(archive_path) as archive:
         if hashlib.sha256(target.read_bytes()).hexdigest() != digest:
             raise SystemExit('Original snapshot differs: '+str(relative))
         manifest[relative.as_posix()] = {'sha256':digest,'bytes':len(content)}
-snapshot = {'source_url':'http://192.168.220.130/saige-winding/source', 'commit':'0e4fbf7f646a81749b188e088018b501c4de769b', 'archive_sha256':hashlib.sha256(archive_path.read_bytes()).hexdigest(),'files':manifest}
+snapshot = {'source_url':'http://gpu.example.internal/saige-winding/source', 'commit':'0e4fbf7f646a81749b188e088018b501c4de769b', 'archive_sha256':hashlib.sha256(archive_path.read_bytes()).hexdigest(),'files':manifest}
 (ROOT/'original'/'manifest.json').write_text(json.dumps(snapshot,indent=2),encoding='utf-8')
 working = ROOT/'working'/'SaigeWindingMonitoring'
 if not working.exists():
